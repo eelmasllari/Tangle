@@ -25,6 +25,13 @@
 	cursor: pointer;
 }
 
+/* TKSelect */
+
+.TKSelect {
+        color: #46f;
+        border-bottom: 1px dashed #46f;
+        cursor: pointer;
+}
 
 /* TKAdjustableNumber */
 
@@ -47,4 +54,3 @@
 	color: #00f;
 	font: 9px "Helvetica-Neue", "Arial", sans-serif;
 }
-
