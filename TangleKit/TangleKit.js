@@ -108,6 +108,29 @@ Tangle.classes.TKToggle = {
 
 //----------------------------------------------------------
 //
+//  TKIncrement
+//
+//  Click to increment value (modulo the number of options).
+
+Tangle.classes.TKIncrement = {
+
+    initialize: function (element, options, tangle, variable) {
+        element.addEvent("click", function (event) {
+            var value = tangle.getValue(variable);
+            tangle.setValue(variable, ++value % element.getChildren().length);
+        });
+    },
+	
+    update: function (element, value) {
+        element.getChildren().each( function (child, index) {
+            child.style.display = (index != value) ? "none" : "inline";
+        });
+    }
+};
+
+
+//----------------------------------------------------------
+//
 //  TKNumberField
 //
 //  An input box where a number can be typed in.
@@ -472,6 +495,9 @@ Tangle.formats.percent = function (value) {
     return "" + (100 * value).round(0) + "%";
 };
 
+Tangle.formats.height = function (value) {
+	return Math.floor(value/12) + "&prime;" + value%12 + "&Prime;";
+};
 
 
 //----------------------------------------------------------

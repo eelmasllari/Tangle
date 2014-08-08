@@ -19,7 +19,8 @@
 
 /* TKToggle */
 
-.TKToggle {
+.TKToggle,
+.TKIncrement {
 	color: #46f;
 	border-bottom: 1px dashed #46f;
 	cursor: pointer;
