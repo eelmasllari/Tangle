@@ -111,3 +111,6 @@
         	cursor: pointer;
         }
         
+.TKAdjustableNumberDown .TKAdjustableNumberHelp {
+    color: #f00;
+}
