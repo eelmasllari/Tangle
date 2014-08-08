@@ -232,7 +232,168 @@ Tangle.classes.TKAdjustableNumber = {
     }
 };
 
+//----------------------------------------------------------
+//
+//  TKInlineSlider
+//
+//  Drag a slider inline with the text to adjust the value (the slider updates accordingly).
+//
+//  Attributes:  data-min (optional): minimum value
+//               data-max (optional): maximum value
+Tangle.classes.TKInlineSlider = {
+            initialize: function (element, options, tangle, variable) {
+                this.max = options.max || 10;
+                this.min = options.min || 0;
+                this.width = element.getCoordinates().width;
+                this.barElement = (new Element("div", { "class":"TKInlineSliderBar" })).inject(element);
+                var updateWithTouches = (function (touches) {
+                    var x = touches.event.page.x - element.getPosition().x;
+                    var value = Math.round(x / this.width * (this.max - this.min) + this.min);
+                    value = value.limit(this.min, this.max);
+                    tangle.setValue(variable, value);
+                }).bind(this);
+                new BVTouchable(element, { touchDidGoDown:updateWithTouches, touchDidMove:updateWithTouches, touchDidGoUp:function(){} });
+            },
+            update: function (element, value) {
+                this.barElement.setStyle("width", Math.round(this.width * (value - this.min) / (this.max - this.min)));
+            }
+        };
 
+//----------------------------------------------------------
+//
+//  TKExpandingList
+//
+//  Click once to show a list of items to chose from; click one of them to chose it and update the values accordingly.
+//
+//  Attributes:  data-items: items to chose from, separated by a separator (default /). E.g. data-items="shirts/hats/pants"
+//               data-separator (optional, defaults to slash /): separator for the items in the data-items string 
+
+Tangle.classes.TKExpandingList = {
+            initialize: function (element, options, tangle, variable) {
+                var isExpanded = false;
+                this.separator = options.separator || "/";
+                var items = options.items.split(this.separator);
+                
+                var subelements = [];
+                subelements.push(new Element("span", { text:"[ " }));
+                items.each(function (item, index) {
+                    var itemElement = new Element("span", { "class":"TKExpandingListItem", text:item });
+                    itemElement.onclick = function () { itemWasClicked(item); }
+                    subelements.push(itemElement);
+                    if (index < items.length - 1) {
+                        subelements.push(new Element("span", { text:", " }));
+                    }
+                });
+                subelements.push(new Element("span", { text:" ]" }));
+                
+                subelements.each(function (subelement) { subelement.inject(element, "bottom"); });
+                
+                function itemWasClicked (item) {
+                    isExpanded = !isExpanded;
+                    tangle.setValue(variable, item);
+                    update(element,item);  // update expanded, even if variable doesn't change
+                }
+                
+                function update (element, value) {
+                    subelements.each(function (subelement) {
+                        var text = subelement.get("text");
+                        subelement.style.display = (isExpanded || text == value) ? "inline" : "none";
+                    });
+                }
+                this.update = update;
+            }
+        };
+    
+    
+//----------------------------------------------------------
+//
+//  TKExpandingSet
+//
+//  Click to select and deselect items from a list
+//
+//  Attributes:  data-items: items to chose from, separated by a separator (default /). E.g. data-items="shirts/hats/pants"
+//               data-separator (optional, defaults to slash /): separator for the items in the data-items string 
+ 
+    Tangle.classes.TKExpandingSet = {
+            initialize: function (element, options, tangle, variable) {
+                var isExpanded = false;
+                this.separator = options.separator || "/";
+                var items = options.items.split(this.separator);
+                
+                var subelements = [];
+
+                var summaryElement = new Element("span", { "class":"TKExpandingSetSummary" });
+                summaryElement.onclick = function () { summaryWasClicked(); }
+                subelements.push(summaryElement);
+                
+                subelements.push(new Element("span", { text:"[ " }));
+                items.each(function (item, index) {
+                    var itemElement = new Element("span", { "class":"TKExpandingSetItem", text:item });
+                    itemElement.onclick = function () { itemWasClicked(item); }
+                    subelements.push(itemElement);
+                    if (index < items.length - 1) {
+                        subelements.push(new Element("span", { text:", " }));
+                    }
+                });
+                subelements.push(new Element("span", { text:" ]" }));
+                
+                subelements.each(function (subelement) { subelement.inject(element, "bottom"); });
+                setExpanded(false);
+                
+                function isItemSelected (item) {
+                    var selectedItems = tangle.getValue(variable);
+                    return !!selectedItems[item];
+                }
+
+                function setItemSelected (item, selected)  {
+                    var newSelectedItems = Object.clone(tangle.getValue(variable));
+                    if (selected) { newSelectedItems[item] = true; }
+                    else { delete newSelectedItems[item]; }
+                    tangle.setValue(variable, newSelectedItems);
+                }
+                
+                function itemWasClicked (item) {
+                    setItemSelected(item, !isItemSelected(item));
+                }
+                
+                function summaryWasClicked () {
+                    setExpanded(true);
+                }
+                
+                function setExpanded (expanded) {
+                    isExpanded = expanded;
+                    subelements.each(function (subelement) {
+                        subelement.style.display = (subelement === summaryElement ? !expanded : expanded) ? "inline" : "none";
+                    });
+                }
+                
+                function update (element, selectedItems) {
+                    subelements.each(function (subelement, index) {
+                        if (!subelement.hasClass("TKExpandingSetItem")) { return; }
+                        var isSelected = !!selectedItems[subelement.get("text")];
+                        if (isSelected) { subelement.addClass("TKExpandingSetItemSelected"); }
+                        else { subelement.removeClass("TKExpandingSetItemSelected"); }
+                    });
+
+
+                    var summaryText = ""; 
+                    if (items.length == 0) {
+                        //nothing to show here, nothing was selected
+                        summaryText = "";
+                    } else if (items.length == 1) {
+                        summaryText = items[0];
+                    } else if (items.length == 2) {
+                        summaryText = items[0] + " and " + items[1];
+                    } else {
+                        var allButLast = items.slice(0, items.length - 1);
+                        summaryText = allButLast.join(", ") + ", and " + items[items.length - 1];
+                    }
+                    summaryElement.set("text", summaryText);
+                }
+                this.update = update;
+            }
+        };
+    
 
 
 //----------------------------------------------------------

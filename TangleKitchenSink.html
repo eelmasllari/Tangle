@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Tangle Kitchen Sink</title>
+
+	<!-- Tangle -->
+	<script type="text/javascript" src="Tangle.js"></script>
+
+	<!-- TangleKit (optional) -->
+	<link rel="stylesheet" href="TangleKit/TangleKit.css" type="text/css">
+	<script type="text/javascript" src="TangleKit/mootools.js"></script>
+	<script type="text/javascript" src="TangleKit/sprintf.js"></script>
+	<script type="text/javascript" src="TangleKit/BVTouchable.js"></script>
+	<script type="text/javascript" src="TangleKit/TangleKit.js"></script>
+
+    <!-- kitchen sink styles -->
+    <style type="text/css">
+    dt {
+        display: block;
+        font-size: 120%;
+        margin-top: 3em;
+        font-weight: bold;
+    }
+    dd {
+        margin-top: 0.5em;
+    }
+    dl {
+        font-family: Verdana, Tahoma, sans-serif;
+        font-size: 10pt;
+    }
+    </style>
+	<!-- example -->
+	<script type="text/javascript">
+
+		function setUpTangle () {
+
+			var element = document.getElementById("kitchensink");
+
+			var tangle = new Tangle(element, {
+				initialize: function () {
+				    this.cookies = 4;
+				    this.moneyInPurse = 100;
+				    this.pricePerCookie = 2;
+					this.caloriesPerCookie = 50;
+					this.showTKIf = 1;
+                    this.showTKSwitch = 0;
+                    this.moneyLeft = this.moneyInPurse - this.cookies * this.pricePerCookie;
+                    this.toggleButton = 0;
+                    this.sweetsType = "cookies";
+                    this.sweetsTypesMultiple = { cookies:true };
+				},
+				update: function () {
+					this.calories = this.cookies * this.caloriesPerCookie;
+
+					if (this.cookies < 50) {
+					    this.showTKIf = 1;
+					} else {
+					    this.showTKIf = 0;
+					}
+                    
+                    this.showTKSwitch = Math.floor(this.cookies/30);
+                    this.moneyLeft = this.moneyInPurse - this.cookies * this.pricePerCookie;
+                    
+                    var info = this.sweetsData[this.sweetsType];
+                    this.sweetInstance = info.instance;
+                    this.sweetPrice = info.price;
+                    
+                    var totalPrice = 0;
+                    Object.each(this.sweetsTypesMultiple, function (v, type) {
+                        var info = this.sweetsData[type];
+                        if (info) { totalPrice += info.price; }
+                    }, this);
+                    this.totalPrice = totalPrice;
+				},
+                sweetsData: {
+                    cookies: { instance:"cookie", price: 2 },
+                    cakes: { instance:"cake", price: 5 },
+                    muffins: {instance: "muffin", price: 10}
+                },
+                clothingInfoByType: {
+                    hats: { price:8 },
+                    shirts: { price:17 },
+                    pants: { price:34 },
+                    shoes: { price:75 }
+                }
+			});
+		}
+
+	</script>
+</head>
+
+<body onload="setUpTangle();">
+
+	<p>This is a reactive document that shows all the controls and formats in the TangleKit.</p>
+	<dl id="kitchensink">
+	
+	    <dt>class.TKAdjustableNumber</dt> 
+		<dd>When you eat <span data-var="cookies" class="TKAdjustableNumber" data-min="2" data-max="100"> cookies</span>, you
+		will consume <span data-var="calories"></span> calories.</dd>
+		<dt>class.TKNumberField</dt> 
+		<dd>When you eat <span data-var="cookies" class="TKNumberField" data-min="2" data-max="100"> cookies</span>, you
+		will consume <span data-var="calories"></span> calories.</dd>
+
+		<dt>class.TKInlineSlider</dt> 
+		<dd>Right now you want to eat <span data-var="cookies"></span> cookies, but you can change (or visualize!) it with the slider here: <span data-var="cookies" class="TKInlineSlider" data-min="2" data-max="100"></span></dd>
+
+		
+		<dt>class.TKExpandingList</dt> 
+        <dd>Say you were shopping for <span class="TKExpandingList" data-var="sweetsType" data-items="cookies/cakes/muffins"></span>.
+        A typical <span data-var="sweetInstance"></span> costs <span data-var="sweetPrice" data-format="dollars"></span>.
+        </dd>   
+
+		<dt>class.TKExpandingSet</dt> 
+        <dd>Or you want several kinds of sweets: <span class="TKExpandingSet" data-var="sweetsTypesMultiple" data-items="cookies/cakes/muffins"></span>. That will cost you 
+        about <span data-var="totalPrice" data-format="dollars"></span>.</dd>   
+       
+
+	    <dt>class.TKIf</dt> 
+		<dd><span class="TKIf" data-var="showTKIf">This sentence will only show when cookies < 50.</span> <span class="TKIf" data-var="showTKIf" data-invert="invert">Hey there! You increased the cookies to more than 50! This greeting will only show when cookies >= 50.</span></dd>
+	    <dt>class.TKSwitch</dt> 
+		<dd class="TKSwitch" data-var="showTKSwitch"><span>Up to 30: Make sure it less than a cookie a day!</span><span>Come on, more than 30 cookies?</span>
+		<span>60-90 cookies: Hey, you cant get that many cookies! Leave some for me!!</span><span>More than 90: OK, I give up, I bake my own cookies!</span></dd>
+	    <dt>class.TKSwitchPositiveNegative</dt> 
+        <dd class="TKSwitchPositiveNegative" data-var="moneyLeft"><span>We have enough money to buy that many cookies and <span data-var="moneyLeft"></span>EUR is left.</span><span>We don't have enough money for all those cookies, sorry! </span></dd>
+	    <dt>class.TKToggle</dt> 
+        <dd>The following number can be switched between 0 and 1 simply by clicking: <span class="TKToggle" data-var="toggleButton"></span>. <span class="TKSwitch" data-var="toggleButton"><span>Selected: NO</span><span>Selected: YES</span></dd>
+	    <dt>format.p3</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="p3"></span></dd>
+	    <dt>format.neg_p3</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="neg_p3"></span></dd>
+	    <dt>format.p2</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="p2"></span></dd>
+	    <dt>format.e6</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="e6"></span></dd>
+	    <dt>format.abs_e6</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="abs_e6"></span></dd>
+	    <dt>format.freq</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="freq"></span></dd>
+	    <dt>format.dollars</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="dollars"></span></dd>
+	    <dt>format.free</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="free"></span></dd>
+	    <dt>format.percent</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="percent"></span></dd>
+
+	</dl>
+	</div>
+
+</body>
+</html>

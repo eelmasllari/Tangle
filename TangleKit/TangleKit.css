@@ -48,3 +48,57 @@
 	font: 9px "Helvetica-Neue", "Arial", sans-serif;
 }
 
+       .TKInlineSlider {
+        	display: inline-block;
+        	position:relative;
+        	background-color: #ccc;
+        	width: 200px;
+        	height: 12px;
+        	cursor: pointer;
+        	cursor: move;
+        	cursor: col-resize;
+        }
+        .TKInlineSliderBar {
+        	position:absolute;
+        	background-color: #f00;
+        	height: 12px;
+        	top: 0px;
+        	left: 0px;
+        }
+        
+   .TKExpandingListItem {
+        	color: #46f;
+        	border-bottom: 1px dashed #46f;
+        	cursor: pointer;
+        }
+        .TKExpandingListItem:hover {
+        	color: #00c;
+        	border-bottom: 1px dashed #00c;
+        }
+        
+        
+        .TKExpandingSetItem {
+        	color: #aaa;
+        	border-bottom: 1px dashed #aaa;
+        	cursor: pointer;
+        }
+        .TKExpandingSetItem:hover {
+        	color: #666;
+        	border-bottom: 1px dashed #666;
+        }
+        .TKExpandingSetItemSelected {
+        	color: #46f;
+        	font-weight:bold;
+        	border-bottom: 1px dashed #46f;
+        	cursor: pointer;
+        }
+        .TKExpandingSetItemSelected:hover {
+        	color: #02f;
+        	border-bottom: 1px dashed #02f;
+        }
+        .TKExpandingSetSummary {
+        	color: #46f;
+        	border-bottom: 1px dashed #46f;
+        	cursor: pointer;
+        }
+        
