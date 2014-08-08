@@ -387,4 +387,5 @@ Tangle.classes = {};
 Tangle.formats = {};
 
 Tangle.formats["default"] = function (value) { return "" + value; };
+Tangle.formats["none"] = function (value) { return ""; };
 
