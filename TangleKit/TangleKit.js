@@ -499,6 +499,8 @@ Tangle.formats.height = function (value) {
 	return Math.floor(value/12) + "&prime;" + value%12 + "&Prime;";
 };
 
+Tangle.formats.default = function (value) { return "" + value; };
+Tangle.formats.hidden = function (value) { return ""; };
 
 //----------------------------------------------------------
 
