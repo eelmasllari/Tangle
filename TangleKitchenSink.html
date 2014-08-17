@@ -49,6 +49,8 @@
                     this.toggleButton = 0;
                     this.sweetsType = "cookies";
                     this.sweetsTypesMultiple = { cookies:true };
+                    this.selectButton=0;
+                    this.incrementButton = 0;
 				},
 				update: function () {
 					this.calories = this.cookies * this.caloriesPerCookie;
@@ -125,6 +127,62 @@
         <dd class="TKSwitchPositiveNegative" data-var="moneyLeft"><span>We have enough money to buy that many cookies and <span data-var="moneyLeft"></span>EUR is left.</span><span>We don't have enough money for all those cookies, sorry! </span></dd>
 	    <dt>class.TKToggle</dt> 
         <dd>The following number can be switched between 0 and 1 simply by clicking: <span class="TKToggle" data-var="toggleButton"></span>. <span class="TKSwitch" data-var="toggleButton"><span>Selected: NO</span><span>Selected: YES</span></dd>
+	    
+	    <dt>class.TKSelect</dt> 
+        <dd>Note that TKSelect must be used with TKSwitch to look good. <br/>Click to cycle through a list of values: <span class="TKSelect TKSwitch" data-var="selectButton"><span> first option</span><span>second option</span><span>third option</span><span>fourth option</span></span>. Currently option <span data-var="selectButton"></span> is selected.</dd>
+
+	    <dt>class.TKIncrement</dt> 
+        <dd>Note that TKIncrement is like TKSelect but does not need a TKSwitch!<br/>Click to cycle through a list of values: <span class="TKIncrement" data-var="incrementButton"><span> first option</span><span>second option</span><span>third option</span><span>fourth option</span></span>. Currently option <span data-var="incrementButton"></span> is selected.</dd>
+
+	    <dt>class.TKPictureGrid</dt> 
+        <dd>Pictures will be shown here according to the value of a variable. 
+<!--
+data-var = var
+data-scale = how many units per image
+data-imagewidth = image width
+data-imageheight = image height
+data-imagefile = imagepath
+data-align = align left.right etc
+-->
+        <div class="TKPictureGrid" data-scale="2" data-align="center" data-var="cookies" style="width:200px; height:120px;background:yellow;"></div>
+        </dd>
+	    <dt>class.TKPictureBar</dt> 
+        <dd>Pictures will be shown here in a stacked bar (horizontal/vertical)  according to the value of a variable. 
+<!--
+data-var = var
+data-scale = how many units per image
+data-imagewidth = image width
+data-imageheight = image height
+data-imagestack = pixels how much the images cover each other (when stacked)
+data-imagefile = imagepath
+data-align = vertical or horizontal
+data-max = the value that would correspond to the full bar
+-->
+        <div class="TKPictureBar" data-scale="2" data-max="100" data-align="vertical" data-var="cookies" style="width:20px; height:200px;background:yellow;"></div>
+        <div class="TKPictureBar" data-scale="2" data-max="100" data-align="horizontal" data-var="cookies" style="width:200px; height:20px;background:yellow;"></div>
+
+        </dd>
+        
+  /*      
+        data-var
+data-mapto: day/week/month/quarter
+data-span: week/month/quarter/year
+data-zoom: data-mapto up to one before data-span
+data-start: date to start calendar on, yyyy-mm-dd (leave out parts as necessary)
+*/
+<dd><div class="TKProgressCalendar" data-var="cookies" data-mapto = "quarter" data-start="2012-08-17" data-zoom="day" style="width: 400px"></div></dd>
+
+
+        <dt>class.TKHorizontalGraphBar</dt>
+        <dd>
+        <table>
+        <th><td>Values To Compare</td><td>Bar graph</td></th>
+        <tr><td>Price for chosen sweet (see TKExpandingList)</td><td class="TKHorizontalGraphBar" data-var="sweetPrice" data-max="totalPrice"></td></tr>
+        <tr><td>Price for all chosen sweets (see TKExpandingSet)</td><td class="TKHorizontalGraphBar" data-var="totalPrice" data-max="totalPrice"></td></tr>
+        </table>
+        
+        </dd>
+
 	    <dt>format.p3</dt> 
         <dd>The number of cookies is: <span data-var="cookies" data-format="p3"></span></dd>
 	    <dt>format.neg_p3</dt> 
@@ -143,6 +201,12 @@
         <dd>The number of cookies is: <span data-var="cookies" data-format="free"></span></dd>
 	    <dt>format.percent</dt> 
         <dd>The number of cookies is: <span data-var="cookies" data-format="percent"></span></dd>
+        <dt>format.height</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="height"></span></dd>
+        <dt>format.default</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="default"></span></dd>
+        <dt>format.hidden</dt> 
+        <dd>The number of cookies is: <span data-var="cookies" data-format="hidden"></span></dd>
 
 	</dl>
 	</div>

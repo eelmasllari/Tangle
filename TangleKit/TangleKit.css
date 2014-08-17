@@ -114,3 +114,15 @@
 .TKAdjustableNumberDown .TKAdjustableNumberHelp {
     color: #f00;
 }
+
+.BarGraphBarDiv {
+    background-color: #aaa;
+    height: 6px;
+    margin-top: 1px;
+}
+
+.TKProgressCalendar-completed {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+}

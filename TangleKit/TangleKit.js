@@ -7,6 +7,25 @@
 //
 
 
+//https://stackoverflow.com/questions/1643320/get-month-name-from-date
+Date.prototype.getMonthName = function(lang) {
+    lang = lang && (lang in Date.locale) ? lang : 'en';
+    return Date.locale[lang].month_names[this.getMonth()];
+};
+
+Date.prototype.getMonthNameShort = function(lang) {
+    lang = lang && (lang in Date.locale) ? lang : 'en';
+    return Date.locale[lang].month_names_short[this.getMonth()];
+};
+
+Date.locale = {
+    en: {
+       month_names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+       month_names_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    }
+};
+
+
 (function () {
 
 
@@ -505,8 +524,464 @@ Tangle.formats.height = function (value) {
 	return Math.floor(value/12) + "&prime;" + value%12 + "&Prime;";
 };
 
+
 Tangle.formats.default = function (value) { return "" + value; };
 Tangle.formats.hidden = function (value) { return ""; };
+
+/*
+data-var = var
+data-scale = how many units per image
+data-imagewidth = image width
+data-imageheight = image height
+data-imagefile = imagepath
+*/
+        
+Tangle.classes.TKPictureGrid = {
+    initialize: function (element, options, tangle, variable) {
+    
+        this.scale = options.scale || 1;
+        this.imageheight = options.imageheight || 20;
+        this.imagewidth = options.imagewidth || 20;
+        this.imagefile = options.image || 'picgrid.png';
+        element.setStyle("position", "relative");
+    },
+    
+    update: function (element, value) {
+    
+        var imgCount = Math.ceil(value/this.scale);
+    
+    
+        var imgAspect = this.imageheight / this.imagewidth;
+        var viewSize = element.getSize();
+        var viewWidth = viewSize.x;
+        var viewHeight = viewSize.y;
+      
+        var rowCount, columnCount, imgWidth = 0, imgHeight = 0;
+        for (var tryRowCount = 1; tryRowCount < 10; tryRowCount++) {
+        	var tryColumnCount = Math.ceil(imgCount / tryRowCount);
+        	var tryImgWidth = Math.floor(viewWidth / tryColumnCount);
+        	var tryImgHeight = Math.floor(tryImgWidth * imgAspect);
+        	if (tryImgHeight * tryRowCount > viewHeight) {
+        		tryImgHeight = Math.floor(viewHeight / tryRowCount);
+        		tryImgWidth = Math.round(tryImgHeight / imgAspect);
+        	}
+        	if (tryImgWidth < imgWidth) { 
+        	    break; 
+        	}
+    
+        	rowCount = tryRowCount;
+        	columnCount = tryColumnCount;
+        	imgWidth = tryImgWidth;
+        	imgHeight = tryImgHeight;
+        }
+    
+        // make sure the grid containers exist, and there are enough images for the grid
+    
+        var imageGridDiv = $(element.firstChild);
+        var imageGridPartialDiv = $(element.lastChild);
+        
+        if (!imageGridDiv) {
+        	imageGridDiv = (new Element("div", { "style": "position:relative;" })).inject(element);
+        	imageGridPartialDiv = (new Element("div", { "style": "position:absolute; background-color:rgba(255,255,255,0.9);" })).inject(element);
+        }
+
+        var childrenCount = imageGridDiv.getChildren().length;
+        while (childrenCount < imgCount) {
+        	(new Element("img", { "src": this.imagefile})).inject(imageGridDiv);
+        	childrenCount++;
+        }
+        while (childrenCount > imgCount) {
+        	imageGridDiv.removeChild(imageGridDiv.lastChild);
+        	childrenCount--;
+        }
+    
+        // update the image positions and sizes
+        
+        var columnIndex = 0;
+        var rowIndex = 0;
+    
+        imageGridDiv.getChildren().each( function(img) {
+        	img.setStyle("width", imgWidth);
+        	img.setStyle("height", imgHeight);
+            img.setStyle('float', 'left');
+        	columnIndex++;
+        	if (columnIndex >= columnCount) {
+        		columnIndex = 0;
+        		rowIndex++;
+        	}
+        });
+    
+        // update the whited-out section of the last image
+        var partialValueLeft = imgCount * this.scale - value;
+        if (partialValueLeft != 0) {
+            var coverThisMuch = imgHeight * (1 - (partialValueLeft / this.scale));
+            imageGridPartialDiv.setStyle("display", "block");
+            imageGridPartialDiv.setStyle("width", imgWidth);
+            imageGridPartialDiv.setStyle("height", coverThisMuch);
+        
+            var imageToCover = $(imageGridDiv.lastChild);
+            if (imageToCover) {
+                positionToCover = imageToCover.getPosition($(imageGridDiv));
+                imageGridPartialDiv.setStyle("top", positionToCover.y);
+              imageGridPartialDiv.setStyle("left", positionToCover.x);
+            }
+        } else {
+            imageGridPartialDiv.setStyle("display", "none");
+        }
+    }
+};
+
+
+/*
+data-max = either a number or the name of a variable that is the max value for the graph
+data-var - the variable to graph
+*/
+Tangle.classes.TKHorizontalGraphBar = {
+    isNumeric: function( obj ) {
+        if(!Array.isArray) {
+            Array.isArray = function(arg) {
+                return Object.prototype.toString.call(arg) === '[object Array]';
+            };
+        }
+        return !Array.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
+    },
+    initialize: function (element, options, tangle, variable) {
+        this.max = options.max || 100;
+        this.tangle = tangle;
+    },
+    update: function (element, value) {
+        var maxValue = this.isNumeric(this.max) ? this.max : this.tangle.getValue(this.max);
+        var maxValue=100;
+        var barDiv = element.getElement(".BarGraphBarDiv");
+        if (!barDiv) {
+    	    barDiv = (new Element("div", { "class":"BarGraphBarDiv" })).inject(element);
+        }
+        var containerSize = element.getSize();
+        var width;
+        if (maxValue == 0) {
+            width = 0;
+        } else {
+            width = (value / maxValue * containerSize.x).round();
+        }
+        barDiv.setStyle("width", width);
+    }
+};
+
+
+/*
+
+data-var = var
+data-scale = how many units per image
+data-imagewidth = image width
+data-imageheight = image height
+data-imagestack = percent how much the images cover each other (when stacked)
+data-imagefile = imagepath
+data-align = vertical or horizontal
+data-max = the value that would correspond to the full bar
+*/
+        
+Tangle.classes.TKPictureBar = {
+    initialize: function (element, options, tangle, variable) {
+    
+        this.scale = options.scale || 1;
+        this.imageheight = options.imageheight || 20;
+        this.imagewidth = options.imagewidth || 20;
+        this.imagestack = options.imagestack || 'default';
+        if (this.imagestack != 'default') {
+            if (this.imagestack < 0) this.imagestack = 0; else if (this.imagestack > 99) this.imagestack = 99;
+        }
+        this.imagefile = options.image || 'picgrid.png';
+        this.align = options.align || 'vertical';
+        this.max = options.max || 'none';
+        element.setStyle("position", "relative");
+    },
+    
+    update: function (element, value) {
+        var imgCount = Math.ceil(value/this.scale);
+        var viewSize = element.getSize();
+        var viewWidth = viewSize.x;
+        var viewHeight = viewSize.y;
+        
+        if (this.imagestack == 'default') { //stacking must be calculated here
+            //calculate stacking so as to fill full bar up to width/height
+            var matchDimension = (this.align == 'vertical') ? viewHeight : viewWidth;
+            var directionDimension = (this.align == 'vertical') ? this.imageheight : this.imagewidth;
+            //uncovered part x (numImages - 1) + one full image dimension = matchDimension
+            //=> (matchDimension - full imagedimension) / (numImages - 1) = uncovered part;
+            // of course, if we need to show a bar with max value "max", then numImages is calculated accordingly
+            var numImages = imgCount;
+            if (this.max != 'none') {             
+                numImages = Math.ceil(this.max/this.scale);
+            }
+
+            if (numImages > 1) {
+                this.imagestack = (matchDimension - directionDimension) / (numImages - 1);
+            } else {
+                this.imagestack = 0;
+            }
+            if (this.imagestack > directionDimension) {
+                this.imagestack = directionDimension;
+            }
+        }
+                      
+        // make sure the grid containers exist, and there are enough images for the grid
+        var imageGridDiv = $(element.firstChild);
+        var imageGridPartialDiv = $(element.lastChild);
+        
+        if (!imageGridDiv) {
+        	imageGridDiv = (new Element("div", { "style": "position:relative;" })).inject(element);
+        	imageGridPartialDiv = (new Element("div", { "style": "position:absolute; background-color:rgba(255,255,255,0.9);" })).inject(element);
+        }
+        
+        var childrenCount = imageGridDiv.getChildren().length;
+        while (childrenCount < imgCount) {
+        	(new Element("img", { "src": this.imagefile})).inject(imageGridDiv);
+        	childrenCount++;
+        }
+        while (childrenCount > imgCount) {
+        	imageGridDiv.removeChild(imageGridDiv.lastChild);
+        	childrenCount--;
+        }
+    
+        // update the image positions and sizes
+        //new* needed because this refers to another object inside each
+        var imgIndex = 0, newWidth = this.imagewidth, newHeight = this.imageheight, newStack = this.imagestack, newAlign = this.align;
+        
+        imageGridDiv.getChildren().each( function(img) {
+        	img.setStyle('width', newWidth + 'px');
+        	img.setStyle("height", newHeight + 'px');
+            img.setStyle('position', 'absolute');
+            img.setStyle('z-index', imgIndex);
+            if (newAlign == 'vertical') {
+                img.setStyle('top', (viewHeight - newHeight) /*lowest base*/ - (imgIndex * newStack) /*elevation due to stacking*/ + 'px');
+        	} else {
+        	    img.setStyle('left', (imgIndex * newStack) /*shift due to stacking*/ + 'px');
+        	}
+        	imgIndex++;
+        });
+/*      // update the whited-out section of the last image
+        var partialValueLeft = imgCount * this.scale - value;
+        if (partialValueLeft != 0) {
+            var coverThisMuch = imgHeight * (1 - (partialValueLeft / this.scale));
+            imageGridPartialDiv.setStyle("display", "block");
+            imageGridPartialDiv.setStyle("width", imgWidth);
+            imageGridPartialDiv.setStyle("height", coverThisMuch);
+        
+            var imageToCover = $(imageGridDiv.lastChild);
+            if (imageToCover) {
+                positionToCover = imageToCover.getPosition($(imageGridDiv));
+                imageGridPartialDiv.setStyle("top", positionToCover.y);
+              imageGridPartialDiv.setStyle("left", positionToCover.x);
+            }
+        } else {
+            imageGridPartialDiv.setStyle("display", "none");
+        }
+    */
+    }
+};
+
+/*
+data-var: the variable to show
+data-mapto: day/week/month/quarter, is the variable a day, week, or what
+data-scope: week/month/quarter/year: what is the highest level that the whole calendar shows, i.e. could be a calendar for a month or for whole year
+data-zoom: what is the lowest level that the calendar shows, from data-mapto up to one before data-span
+data-start: date that must be in the shown calendar, ideally start date but not necessarily, format yyyy-mm-dd
+*/
+Tangle.classes.TKProgressCalendar = {
+//http://javascript.about.com/library/bldayyear.htm
+    getDOY: function(d) {
+        var onejan = new Date(this.getFullYear(d),0,1);
+        return Math.ceil((d - onejan) / 86400000);
+    },
+    getFullYear: function(d) {
+        return d.getYear() + 1900;
+    },
+
+//see http://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
+    getWeekNumber: function(d) {
+        // Copy date so we don't modify original
+        d = new Date(+d);
+        d.setHours(0,0,0);
+        // Set to nearest Thursday: current date + 4 - current day number
+        // Make Sunday's day number 7
+        d.setDate(d.getDate() + 4 - (d.getDay()||7));
+        // Get first day of year
+        var yearStart = new Date(d.getFullYear(),0,1);
+        // Calculate full weeks to nearest Thursday
+        var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7)
+        return {year: this.getFullYear(d), weekNo: weekNo};
+    },
+    getDayBaseMonday: function(d) {
+        return (d + 6) % 7;
+    },
+    getMondayOfWeek: function(d) {
+        d = new Date(+d);
+        //roll back to monday of the week of d
+        while (this.getDayBaseMonday(d.getDay()) != 0) {
+            d.setDate(d.getDate() - 1);
+        }
+        return d;
+    },
+    correctWeekNumber: function(weekNumber, d) {
+        if (d.getMonth() == 0 && weekNumber == 52) {
+            weekNumber = 1;
+        } else if (d.getMonth() == 11 && weekNumber == 1) {
+            weekNumber = 52;
+        } 
+        return weekNumber;
+    },
+    makeWeek: function(start, zoom) {
+        var start = new Date(+start);
+        var month = start.getMonth();
+        var weeknr = this.getWeekNumber(start).weekNo;
+        weeknr = this.correctWeekNumber(weeknr, start);
+
+        correctedStart = this.getMondayOfWeek(start); //roll back to monday
+        
+        var answer = '<table><tr><th align="right" width="12.5%">W' + weeknr + '</th>';
+        //now walk all days from that monday.
+        for (var i = 0; i < 7; i++) {
+            var day = this.getDayBaseMonday(correctedStart.getDay());
+            var date = correctedStart.getDate();
+            var doy = this.getDOY(correctedStart);
+            if (correctedStart.getMonth() == month) {
+                //this date belongs to the month of interest (not previous or next)
+                answer += '<td  align="right" width="12.5%" class="day day-' + doy + '">' + date + '</td>';
+            } else {
+                answer += '<td  align="right" width="12.5%" class="day emptyday"></td>';
+            }
+            correctedStart.setDate(correctedStart.getDate() + 1);
+        }
+        answer += '</tr></table>';
+        return answer;
+    },
+    makeMonth: function(start, zoom) {
+        start = new Date(+start);
+        start.setDate(1);
+        
+        var answer = '';
+        var month = start.getMonth();
+        var monthName = start.getMonthName();
+        
+        //these should come after the above assignments because those assignments depend on the non-corrected value
+        var startOfWeek = this.getMondayOfWeek(start); //roll back to monday
+        var correctedStart = start;
+        if (correctedStart.getDate() != startOfWeek.getDate()) {
+            correctedStart = startOfWeek; //correct start here so it 
+        }
+        
+        if (zoom == 'year' || zoom == 'quarter' || zoom == 'month') { //this should not have come here at all
+            //do nothing
+        } else if (zoom == 'week') {
+            answer = '<tr>';
+            var weeks = 0;
+            do {
+                weeks++;
+                var weekNumber = this.getWeekNumber(correctedStart).weekNo;
+                weekNumber = this.correctWeekNumber(weekNumber, start);
+                answer += '<td class="week week-' + weekNumber + '">W' + weekNumber + '</td>';
+                correctedStart.setDate(correctedStart.getDate() + 7);
+            } while (month == correctedStart.getMonth());
+            answer = '<table><tr><th colspan="' + weeks +'">' + monthName + '</th></tr><tr>' + answer + '</tr></table>';
+        } else { //zoom must be == day
+            answer = '<table><tr><th>' + monthName + '</th></tr>';
+            if (correctedStart != start) { //the week starts on another day which, since start is the first of the month, means the week starts in another month already
+                //therefore do the first week based on start, the rest on correctedStart 
+                var weekNumber = this.getWeekNumber(start).weekNo;
+                weekNumber = this.correctWeekNumber(weekNumber, start);
+                answer += '<tr><td class="week week-' + weekNumber + '">' + this.makeWeek(start,zoom) + '</td></tr>';
+                correctedStart.setDate(correctedStart.getDate() + 7);
+            }
+            do {
+                weekNumber = this.getWeekNumber(correctedStart).weekNo;
+                weekNumber = this.correctWeekNumber(weekNumber, start);
+                answer += '<tr><td class="week week-' + weekNumber + '">' + this.makeWeek(correctedStart,zoom) + '</td></tr>';
+                correctedStart.setDate(correctedStart.getDate() + 7); 
+            } while (month == correctedStart.getMonth());
+            answer += '</table>';
+        }
+        return answer;
+    },
+    makeQuarter: function(start, zoom) {
+        start = new Date(+start);
+        var firstMonthOfQuarter = Math.floor(start.getMonth() / 3) * 3;
+        var answer = '<table width="100%"><tr>';
+        if (zoom == 'year' || zoom == 'quarter') { //this should not have come here at all
+            //do nothing
+        } else {
+            for (var i = 0; i < 3; i++) {
+                start.setMonth(firstMonthOfQuarter + i);
+                start.setDate(1);
+                answer += '<td class="month month-' + (start.getMonth() + 1) + '"width="33%" align="right" valign="top">';
+                if (zoom == 'month') {
+                    answer += start.getMonthName();
+                } else {
+                    answer += this.makeMonth(start,zoom);
+                }
+                answer +='</td>';
+            }
+        }
+        answer += '</tr></table>';
+        return answer;
+    },
+    makeYear: function(start, zoom) {
+        start = new Date(+start);
+        var answer = '<table width="100%">';
+        if (zoom == 'year') { //do nothing, no point in having just one box
+            //do nothing
+        } else if (zoom == 'quarter') {
+           answer += '<tr><th align="center" colspan="4">' + this.getFullYear(start) + '</th></tr><tr>';
+           for (var q = 0; q < 4; q++) {
+                answer += '<th class="quarter quarter-' + (q + 1) + '" width="25%">Q' + (q + 1) + '</th>'; 
+            }
+            answer += '</tr>';
+        } else {
+            answer += '<tr><th align="center" colspan="2">'  + this.getFullYear(start) + '</th></tr>';
+            for (var q = 0; q < 4; q++) {
+                var firstMonthOfQuarter = q * 3;
+                start.setMonth(firstMonthOfQuarter);
+                start.setDate(1);
+                answer += '<tr><th width="10%">Q' + (q + 1) + '</th><td class="quarter quarter-' + (q + 1) + '">' + this.makeQuarter(start,zoom) + '</td></tr>';
+            }
+        }
+        answer += '</table>';
+        return answer;
+    },
+    initialize: function (element, options, tangle, variable) {
+        this.mapto = options.mapto || 'day';
+        this.start = new Date(options.start || new Date());
+        this.scope = options.scope || 'month';
+        this.zoom = options.zoom || 'day';
+        this.oldValue = 0;
+        $(element).set('html', this.makeYear(new Date(this.start), this.zoom));
+        
+    },
+    
+    update: function (element, value) {
+    
+        var selectors = [];
+        
+        if (value < this.oldValue) {
+            for (i = this.oldValue; i > value; i--) {
+                selectors.push('.' + this.mapto + '-' + i);
+            }
+            selectors = selectors.join(',');
+            $$(selectors).each(function (elem) {
+                elem.removeClass('TKProgressCalendar-completed');
+            });
+        } else if (value > this.oldValue) {
+            for (i = this.oldValue; i <= value; i++) {
+                selectors.push('.' + this.mapto + '-' + i);
+            }        
+            selectors = selectors.join(',');
+            $$(selectors).each(function (elem) {
+                elem.addClass('TKProgressCalendar-completed');
+            });
+        }
+        this.oldValue = value;
+    
+    }
+};
 
 //----------------------------------------------------------
 
