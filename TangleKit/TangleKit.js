@@ -612,8 +612,9 @@ Tangle.classes.TKPictureGrid = {
         });
     
         // update the whited-out section of the last image
-        var partialValueLeft = imgCount * this.scale - value;
-        if (partialValueLeft != 0) {
+        var overShoot = imgCount * this.scale - value;
+        if (overShoot != 0) {
+            var partialValueLeft = this.scale - overShoot;
             var coverThisMuch = imgHeight * (1 - (partialValueLeft / this.scale));
             imageGridPartialDiv.setStyle("display", "block");
             imageGridPartialDiv.setStyle("width", imgWidth);
@@ -623,7 +624,7 @@ Tangle.classes.TKPictureGrid = {
             if (imageToCover) {
                 positionToCover = imageToCover.getPosition($(imageGridDiv));
                 imageGridPartialDiv.setStyle("top", positionToCover.y);
-              imageGridPartialDiv.setStyle("left", positionToCover.x);
+                imageGridPartialDiv.setStyle("left", positionToCover.x);
             }
         } else {
             imageGridPartialDiv.setStyle("display", "none");
@@ -651,7 +652,6 @@ Tangle.classes.TKHorizontalGraphBar = {
     },
     update: function (element, value) {
         var maxValue = this.isNumeric(this.max) ? this.max : this.tangle.getValue(this.max);
-        var maxValue=100;
         var barDiv = element.getElement(".BarGraphBarDiv");
         if (!barDiv) {
     	    barDiv = (new Element("div", { "class":"BarGraphBarDiv" })).inject(element);
@@ -983,6 +983,72 @@ Tangle.classes.TKProgressCalendar = {
     }
 };
 
+
+Tangle.classes.TKFillBottle = {
+    isNumeric: function( obj ) {
+        if(!Array.isArray) {
+            Array.isArray = function(arg) {
+                return Object.prototype.toString.call(arg) === '[object Array]';
+            };
+        }
+        return !Array.isArray( obj ) && (obj - parseFloat( obj ) + 1) >= 0;
+    },
+    initialize: function (element, options, tangle, variable) {
+        this.min = options.min || 0;
+        this.max = options.max || 100;
+        this.liquid = options.liquid || '#0000ff';
+        this.bottle = options.bottle || 'bottle.png';
+        this.direction = options.direction || 'vertical';
+        this.tangle = tangle;
+        $(element).setStyle('position', 'relative');
+        (new Element("img", { "src": this.bottle, 'class': 'TKFillBottleBottle'})).inject(element);
+        (new Element("div", { "class": 'TKFillBottleLiquid', 'style':'width:0px;height:0px;z-index:-1'})).inject(element);
+    },
+    update: function (element, value) {
+        var maxValue = this.isNumeric(this.max) ? this.max : this.tangle.getValue(this.max);
+        var minValue = this.isNumeric(this.min) ? this.min : this.tangle.getValue(this.min);
+        if (maxValue <= minValue) {
+            maxValue = minValue + 1;
+        }
+        if (value > maxValue) {
+            value = maxValue;
+        } else if (value < minValue) {
+            value = minValue;
+        }
+        var liquidDiv = element.getElement(".TKFillBottleLiquid");
+        liquidDiv.setStyle('background', this.liquid);
+        var bottle = element.getElement('.TKFillBottleBottle');
+        var bottleSize = bottle.getSize();
+        var bottlePosition = bottle.getPosition(element);
+        var dimension;
+        if (this.direction == 'vertical') {
+            dimension = ((value - minValue) / (maxValue - minValue) * bottleSize.y).round();
+            liquidDiv.setStyles({
+                position: 'absolute',
+                width: bottleSize.x + 'px',
+                height: dimension + 'px',
+                left: bottlePosition.x + 'px',
+                top: (bottlePosition.y + (bottleSize.y - dimension)) + 'px',
+                'z-index': '-1'
+            });
+        } else {
+            dimension = ((value - minValue) / (maxValue - minValue) * bottleSize.x).round();
+            liquidDiv.setStyles({
+                position: 'absolute',
+                width: dimension + 'px',
+                height: bottleSize.y + 'px',
+                left: (bottlePosition.x + (bottleSize.x - dimension)) + 'px',
+                top: bottlePosition.y + 'px',
+                'z-index': '-1'
+            });
+        }
+    }
+};
+
+
+
 //----------------------------------------------------------
 
 })();
+
+

@@ -163,14 +163,20 @@ data-max = the value that would correspond to the full bar
 
         </dd>
         
-  /*      
+<!--    
         data-var
 data-mapto: day/week/month/quarter
 data-span: week/month/quarter/year
 data-zoom: data-mapto up to one before data-span
 data-start: date to start calendar on, yyyy-mm-dd (leave out parts as necessary)
-*/
+-->
+<dt>class.TKProgressCalendar</dt>
 <dd><div class="TKProgressCalendar" data-var="cookies" data-mapto = "quarter" data-start="2012-08-17" data-zoom="day" style="width: 400px"></div></dd>
+
+<dt>class.TKFillBottle</dt>
+<dd>
+<div class="TKFillBottle" data-var="cookies" data-bottle="transparentbottle.png"></div>
+</dd>
 
 
         <dt>class.TKHorizontalGraphBar</dt>
@@ -182,6 +188,16 @@ data-start: date to start calendar on, yyyy-mm-dd (leave out parts as necessary)
         </table>
         
         </dd>
+
+this.min = options.min || 0;
+        this.max = options.max || 100;
+        this.liquid = options.liquid || '#0000ff';
+        this.bottle = options.bottle || 'bottle.png';
+        this.direction = options.direction || 'vertical';
+        this.tangle = tangle;
+        $(element).setStyle('position', 'relative');
+        (new Element("img", { "src": this.bottle, 'class': 'TKFillBottleBottle'})).inject(element);
+        (new Element("div", { "class": 'TKFillBottleLiquid'})).inject(element);
 
 	    <dt>format.p3</dt> 
         <dd>The number of cookies is: <span data-var="cookies" data-format="p3"></span></dd>
